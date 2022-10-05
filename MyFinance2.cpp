@@ -215,35 +215,107 @@ Week_Number Date::week_num() const
 
 	return Week_Number(week_num, week_year);
 }
-
 int operator-(const Date& left, const Date& right)
 {
 	return left.convToInt() - right.convToInt();
 }
 
-//class Payment
-//{
-//	double balance;
-//	double min_balance;
-//	string name;
-//};
+
+class Payment_type
+{
+protected:
+	string name;
+	double balance;
+public:
+	Payment_type(string nameP, double balanceP);
+	Payment_type();
+	string get_name() const;
+	double get_balance() const;
+	void set_name(string nameP);
+	void set_balance(double balanceP);
+	void show() const;
+};
+Payment_type::Payment_type(string nameP, double balanceP) :
+	name {nameP}, balance {balanceP} {}
+Payment_type::Payment_type():Payment_type("", 0){}
+string Payment_type::get_name() const
+{
+	return name;
+}
+double Payment_type::get_balance() const
+{
+	return balance;
+}
+void Payment_type::set_name(string nameP)
+{
+	name = nameP;
+}
+void Payment_type::set_balance(double balanceP)
+{
+	balance = balanceP;
+}
+void Payment_type::show() const
+{
+	cout << "This is payment type: " << name << endl;
+	cout << "Available balance is: " << balance << endl;
+	cout << endl;
+}
+
+class Wallet : public Payment_type
+{
+	const double min_balance = 0;
+public:
+	Wallet(double balanceP):Payment_type("Wallet", balanceP){}
+	void show()
+	{
+		cout << "This is payment type: " << name << endl;
+		cout << "Available balance is: " << balance << endl;
+		cout << "Minimum balance is: " << min_balance << endl;
+		cout << endl;
+	}
+};
+
+class Debet_Card : public Payment_type
+{
+	const double min_balance = 0;
+public:
+	Debet_Card(double balanceP) :Payment_type("Debet_Card", balanceP) {}
+	void show()
+	{
+		cout << "This is payment type: " << name << endl;
+		cout << "Available balance is: " << balance << endl;
+		cout << "Minimum balance is: " << min_balance << endl;
+		cout << endl;
+	}
+};
+
+class Credit_Card : public Payment_type
+{
+	const double min_balance = -1000;
+public:
+	Credit_Card(double balanceP) :Payment_type("Credit_Card", balanceP) {}
+	void show()
+	{
+		cout << "This is payment type: " << name << endl;
+		cout << "Available balance is: " << balance << endl;
+		cout << "Minimum balance is: " << min_balance << endl;
+		cout << endl;
+	}
+};
 
 int main()
 {
 	try {
-		Date d1{ 3,10, 2022 };
-		Date d2{ 2, 10, 2022 };
 
-		cout << d1 << " is " << d1.convToInt() << endl;
-		cout << d2 << " is " << d2.convToInt() << endl;
+		Wallet my_wallet(100);
+		my_wallet.show();
 
+		Debet_Card my_dc(1000);
+		my_dc.show();
 		
-		cout << d1 << " is " << week_days[d1.get_weekday()] << endl;
-		cout << d2 << " is " << week_days[d2.get_weekday()] << endl;
+		Credit_Card my_cc(1500);
+		my_cc.show();
 
-		cout << d1 << " is " << d1.week_num() << endl;
-		cout << d2 << " is " << d2.week_num() << endl;
-		
 	}
 	catch (char* s)
 	{
