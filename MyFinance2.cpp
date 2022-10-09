@@ -53,6 +53,7 @@ class Date
 public:
 	Date(int dayP, int monthP, int yearP);
 	Date();
+	Date(const Date& dateP);
 	int get_day();
 	int get_month();
 	int get_year();
@@ -76,6 +77,12 @@ Date::Date(int dayP, int monthP, int yearP) :
 		throw (char*)"Wrong date!";
 }
 Date::Date() : Date(1, 1, 1900) {}
+Date::Date(const Date& dateP)
+{
+	day = dateP.day;
+	month = dateP.month;
+	year = dateP.year;
+}
 int Date::get_day() { return day; }
 int Date::get_month() { return month; }
 int Date::get_year() { return year; }
@@ -226,18 +233,21 @@ class Payment_type
 protected:
 	string name;
 	double balance;
+	double min_balance;
 public:
-	Payment_type(string nameP, double balanceP);
+	Payment_type(string nameP, double balanceP, double min_balanceP);
 	Payment_type();
 	string get_name() const;
 	double get_balance() const;
+	double get_min_balance() const;
 	void set_name(string nameP);
-	void set_balance(double balanceP);
+	void top_up(double top_upP);
+	void write_off(double write_offP);
 	void show() const;
 };
-Payment_type::Payment_type(string nameP, double balanceP) :
-	name {nameP}, balance {balanceP} {}
-Payment_type::Payment_type():Payment_type("", 0){}
+Payment_type::Payment_type(string nameP, double balanceP, double min_balanceP) :
+	name{ nameP }, balance{ balanceP }, min_balance{ min_balanceP } {}
+Payment_type::Payment_type():Payment_type("", 0, 0){}
 string Payment_type::get_name() const
 {
 	return name;
@@ -246,13 +256,27 @@ double Payment_type::get_balance() const
 {
 	return balance;
 }
+double Payment_type::get_min_balance() const
+{
+	return min_balance;
+}
 void Payment_type::set_name(string nameP)
 {
 	name = nameP;
 }
-void Payment_type::set_balance(double balanceP)
+void Payment_type::top_up(double top_upP)
 {
-	balance = balanceP;
+	if (top_upP > 0)
+		balance += top_upP;
+	else
+		throw (char*)"Error! Negative top up!";
+}
+void Payment_type::write_off(double write_offP)
+{
+	if (balance - write_offP < min_balance)
+		throw (char*)"Unsufficient balance to perfom operation!";
+
+	balance -= write_offP;
 }
 void Payment_type::show() const
 {
@@ -263,9 +287,8 @@ void Payment_type::show() const
 
 class Wallet : public Payment_type
 {
-	const double min_balance = 0;
 public:
-	Wallet(double balanceP):Payment_type("Wallet", balanceP){}
+	Wallet(double balanceP):Payment_type("Wallet", balanceP,0){}
 	void show()
 	{
 		cout << "This is payment type: " << name << endl;
@@ -274,48 +297,147 @@ public:
 		cout << endl;
 	}
 };
-
 class Debet_Card : public Payment_type
 {
-	const double min_balance = 0;
+	Date valid_till;
 public:
-	Debet_Card(double balanceP) :Payment_type("Debet_Card", balanceP) {}
+	Debet_Card(double balanceP, Date valid_dateP) :
+		Payment_type("Debet_Card", balanceP, 0), valid_till{valid_dateP}{}
 	void show()
 	{
 		cout << "This is payment type: " << name << endl;
 		cout << "Available balance is: " << balance << endl;
 		cout << "Minimum balance is: " << min_balance << endl;
+		cout << "Valid till: " << valid_till << endl;
+		cout << endl;
+	}
+};
+class Credit_Card : public Payment_type
+{
+	Date valid_till;
+public:
+	Credit_Card(double balanceP, Date valid_tillP) :
+		Payment_type("Credit_Card", balanceP, -1000), valid_till{valid_tillP} {}
+	void show()
+	{
+		cout << "This is payment type: " << name << endl;
+		cout << "Available balance is: " << balance << endl;
+		cout << "Minimum balance is: " << min_balance << endl;
+		cout << "Valid till: " << valid_till << endl;
 		cout << endl;
 	}
 };
 
-class Credit_Card : public Payment_type
+vector<string> Exp_Groups{ "Sport", "Health", "Food", "Wear", "Transport",
+						"Entertainment", "Education" };
+
+class Exp_Counter
 {
-	const double min_balance = -1000;
+	int count;
 public:
-	Credit_Card(double balanceP) :Payment_type("Credit_Card", balanceP) {}
-	void show()
-	{
-		cout << "This is payment type: " << name << endl;
-		cout << "Available balance is: " << balance << endl;
-		cout << "Minimum balance is: " << min_balance << endl;
-		cout << endl;
-	}
+	Exp_Counter(int countP);
+	Exp_Counter();
+	int get_count();
+	void operator()();
 };
+Exp_Counter::Exp_Counter(int countP):count{countP}{}
+Exp_Counter::Exp_Counter() : Exp_Counter(0){}
+int Exp_Counter::get_count()
+{
+	return count;
+}
+void Exp_Counter::operator()()
+{
+	count++;
+}
+Exp_Counter exp_count;
+
+class Expense
+{
+	int exp_number;
+	string exp_group;
+	double amount;
+	Date date;
+	vector<Payment_type>::iterator paym_type;
+public:
+	Expense(string exp_groupP, 
+		double amountP, Date dateP, vector<Payment_type>::iterator paym_typeP);
+	Expense();
+	void show();
+	int get_exp_number();
+	string get_exp_group();
+	double get_amount();
+	Date get_date();
+	vector<Payment_type>::iterator get_paym_type();
+};
+Expense::Expense(string exp_groupP, 
+	double amountP, Date dateP, vector<Payment_type>::iterator paym_typeP) :
+	exp_group {exp_groupP}, amount{ amountP },
+	date{ dateP }, paym_type{ paym_typeP }
+{	
+	exp_count();
+	exp_number = exp_count.get_count(); 
+	paym_type->write_off(amount);
+}
+Expense::Expense() : 
+	Expense("", 0, {1,1,1990}, vector<Payment_type>::iterator()) {}
+void Expense::show()
+{
+	cout << exp_number << "\t" << date << "\t" << exp_group << "\t" 
+		<< amount << "\t" << paym_type->get_name() << endl;
+}
+int Expense::get_exp_number()
+{
+	return exp_number;
+}
+string Expense::get_exp_group()
+{
+	return exp_group;
+}
+double Expense::get_amount()
+{
+	return amount;
+}
+Date Expense::get_date()
+{
+	return date;
+}
+vector<Payment_type>::iterator Expense::get_paym_type()
+{
+	return paym_type;
+}
+
 
 int main()
 {
 	try {
 
 		Wallet my_wallet(100);
-		my_wallet.show();
+		my_wallet.top_up(150);
+		Debet_Card my_dc(1000, { 31,10,2027 });	
+		Credit_Card my_cc(1500, {30, 9, 2025});
 
-		Debet_Card my_dc(1000);
-		my_dc.show();
-		
-		Credit_Card my_cc(1500);
-		my_cc.show();
+		vector<Payment_type> MyPaymTypes;
+		MyPaymTypes.push_back(my_wallet);
+		MyPaymTypes.push_back(my_cc);
+		MyPaymTypes.push_back(my_dc);
 
+		for (auto var : MyPaymTypes)
+			var.show();
+
+		auto it1 = MyPaymTypes.begin();
+		Expense e1{Exp_Groups[0], 130, {1,1,2022}, it1};
+		e1.show();
+
+		Expense e2{ Exp_Groups[1], 105, {10,1,2022}, it1+1 };
+		e2.show();
+
+		Expense e3{ Exp_Groups[2], 300, {20,4,2022}, it1+2 };
+		e3.show();
+		cout << endl;
+
+		for (auto var : MyPaymTypes)
+			var.show();
 	}
 	catch (char* s)
 	{
