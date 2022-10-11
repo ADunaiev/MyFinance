@@ -1,6 +1,8 @@
 ﻿#include <iostream>
 #include <string.h>
 #include <vector>
+#include <fstream>
+#include <algorithm>
 using namespace std;
 
 //Создайте систему управления персональными финансами.
@@ -234,20 +236,28 @@ protected:
 	string name;
 	double balance;
 	double min_balance;
+	Date valid_till;
 public:
-	Payment_type(string nameP, double balanceP, double min_balanceP);
+	Payment_type(string nameP, double balanceP, double min_balanceP, 
+		Date valid_tillP);
 	Payment_type();
 	string get_name() const;
 	double get_balance() const;
 	double get_min_balance() const;
+	Date get_valid_till() const;
 	void set_name(string nameP);
+	void set_balance(double balanceP);
+	void set_min_balance(double min_balanceP);
+	void set_valid_date(Date valid_tillP);
 	void top_up(double top_upP);
 	void write_off(double write_offP);
 	void show() const;
 };
-Payment_type::Payment_type(string nameP, double balanceP, double min_balanceP) :
-	name{ nameP }, balance{ balanceP }, min_balance{ min_balanceP } {}
-Payment_type::Payment_type():Payment_type("", 0, 0){}
+Payment_type::Payment_type(string nameP, double balanceP, double min_balanceP,
+	Date valid_tillP) :
+	name{ nameP }, balance{ balanceP }, min_balance{ min_balanceP }, 
+	valid_till{valid_tillP}{}
+Payment_type::Payment_type():Payment_type("", 0, 0, {1,1,1900}) {}
 string Payment_type::get_name() const
 {
 	return name;
@@ -260,9 +270,25 @@ double Payment_type::get_min_balance() const
 {
 	return min_balance;
 }
+Date Payment_type::get_valid_till() const
+{
+	return valid_till;
+}
 void Payment_type::set_name(string nameP)
 {
 	name = nameP;
+}
+void Payment_type::set_balance(double balanceP)
+{
+	balance = balanceP;
+}
+void Payment_type::set_min_balance(double min_balanceP)
+{
+	min_balance = min_balanceP;
+}
+void Payment_type::set_valid_date(Date valid_tillP)
+{
+	valid_till = valid_tillP;
 }
 void Payment_type::top_up(double top_upP)
 {
@@ -282,13 +308,15 @@ void Payment_type::show() const
 {
 	cout << "This is payment type: " << name << endl;
 	cout << "Available balance is: " << balance << endl;
+	cout << "Minimum balance is: " << min_balance << endl;
+	cout << "Valid till: " << valid_till << endl;
 	cout << endl;
 }
 
 class Wallet : public Payment_type
 {
 public:
-	Wallet(double balanceP):Payment_type("Wallet", balanceP,0){}
+	Wallet(double balanceP):Payment_type("Wallet", balanceP,0, {31,12,2100}) {}
 	void show()
 	{
 		cout << "This is payment type: " << name << endl;
@@ -299,10 +327,10 @@ public:
 };
 class Debet_Card : public Payment_type
 {
-	Date valid_till;
 public:
 	Debet_Card(double balanceP, Date valid_dateP) :
-		Payment_type("Debet_Card", balanceP, 0), valid_till{valid_dateP}{}
+		Payment_type("Debet_Card", balanceP, 0, valid_dateP){}
+	
 	void show()
 	{
 		cout << "This is payment type: " << name << endl;
@@ -314,10 +342,9 @@ public:
 };
 class Credit_Card : public Payment_type
 {
-	Date valid_till;
 public:
 	Credit_Card(double balanceP, Date valid_tillP) :
-		Payment_type("Credit_Card", balanceP, -1000), valid_till{valid_tillP} {}
+		Payment_type("Credit_Card", balanceP, -1000, valid_tillP){}
 	void show()
 	{
 		cout << "This is payment type: " << name << endl;
@@ -407,23 +434,185 @@ vector<Payment_type>::iterator Expense::get_paym_type()
 	return paym_type;
 }
 
+vector<Payment_type> MyPaymTypes;
+void SaveToFile(vector<Payment_type>& object)
+{
+	remove("Payment_types.txt");
+
+	int size; char* temp = nullptr;
+	double size_d;
+
+	fstream f("Payment_types.txt", ios::out | ios::binary | ios::app);
+
+	if (!f)
+	{
+		throw "\nFile is not opened for writing!\n";
+	}
+	for (auto var :object)
+	{
+		if (temp != nullptr)
+			delete[] temp;
+
+		size = var.get_name().size();
+		f.write((char*)&size, sizeof(int));
+		temp = new char[size + 1];
+		strcpy_s(temp, size + 1, var.get_name().c_str());
+		f.write((char*)temp, size * sizeof(char));
+
+		size_d = var.get_balance();
+		f.write((char*)&size_d, sizeof(double));
+
+		size_d = var.get_min_balance();
+		f.write((char*)&size_d, sizeof(double));
+
+		size = var.get_valid_till().get_day();
+		f.write((char*)&size, sizeof(int));
+
+		size = var.get_valid_till().get_month();
+		f.write((char*)&size, sizeof(int));
+
+		size = var.get_valid_till().get_year();
+		f.write((char*)&size, sizeof(int));
+	}
+
+	f.close();
+	delete[] temp;
+}
+
+//void SaveToFile(list<Auto>& l_auto)
+//{
+//	remove("Autos.txt");
+//
+//	int size; char* temp = nullptr; 
+//	double size_d;
+//
+//	fstream f("Autos.txt", ios::out | ios::binary | ios::app);
+//
+//	if (!f)
+//	{
+//		throw "\nFile is not opened for writing!\n";
+//	}
+//
+//	for (auto var : l_auto)
+//	{
+//		if (temp != nullptr)
+//			delete[] temp;
+//
+//		size = var.get_name().size();
+//		f.write((char*)&size, sizeof(int));
+//		temp = new char[size + 1];
+//		strcpy_s(temp, size + 1, var.get_name().c_str());
+//		f.write((char*)temp, size * sizeof(char));
+//
+//		size = var.get_prod_year();
+//		f.write((char*)&size, sizeof(int));
+//
+//		size = var.get_engine_volume();
+//		f.write((char*)&size, sizeof(int));
+//
+//		size_d = var.get_price();
+//		f.write((char*)&size_d, sizeof(double));
+//	}
+//
+//	f.close();
+//	delete[] temp;
+//}
+vector<Payment_type>& LoadFromFile(vector<Payment_type>& object) {
+	fstream f("Payment_types.txt", ios::in | ios::binary);
+	if (!f) {
+		throw "\nFile is not opened for reading!\n\n";
+	}
+	char* temp = nullptr;
+	int size; double size_d;
+	int _day, _month, _year;
+
+	while (f.read((char*)&size, sizeof(int)))
+	{
+		Payment_type a_temp;
+
+		if (temp != nullptr)
+			delete[] temp;
+
+		temp = new char[size + 1];
+		f.read((char*)temp, size * sizeof(char));
+		temp[size] = '\0';
+		a_temp.set_name(temp);
+
+		f.read((char*)&size_d, sizeof(double));
+		a_temp.set_balance(size_d);
+
+		f.read((char*)&size_d, sizeof(double));
+		a_temp.set_min_balance(size_d);
+
+		f.read((char*)&size, sizeof(int));
+		_day = size;
+
+		f.read((char*)&size, sizeof(int));
+		_month = size;
+
+		f.read((char*)&size, sizeof(int));
+		_year = size;
+
+		a_temp.set_valid_date({ _day, _month, _year });
+
+		object.push_back(a_temp);
+	}
+
+	f.close();
+	if(temp != nullptr)
+		delete[] temp;
+
+	return object;
+}
+
+void show_paym_types(vector<Payment_type>& object)
+{
+	for (auto var : object)
+		var.show();	
+}
+
+//int Menu()
+//{
+//	int temp;
+//	cout << "\nPlease make your choice:\n";
+//	cout << " 1 - to see all autos\n";
+//	cout << " 2 - to add new auto\n";
+//	cout << " 3 - to delete auto\n";
+//	cout << " 4 - to edit auto\n";
+//	cout << " 5 - to sort data\n";
+//	cout << " 6 - to find auto\n";
+//	cout << " 7 - show total number and car value\n";
+//	cout << " 0 - to exit programm\n";
+//	cout << "\nYour choice is - ";
+//	cin >> temp;
+//
+//	return temp;
+//}
 
 int main()
 {
 	try {
 
-		Wallet my_wallet(100);
-		my_wallet.top_up(150);
-		Debet_Card my_dc(1000, { 31,10,2027 });	
-		Credit_Card my_cc(1500, {30, 9, 2025});
+		//Wallet my_wallet(100);
+		//my_wallet.top_up(150);
+		//Debet_Card my_dc(1000, { 31,10,2027 });	
+		//Credit_Card my_cc(1500, {30, 9, 2025});
 
-		vector<Payment_type> MyPaymTypes;
-		MyPaymTypes.push_back(my_wallet);
-		MyPaymTypes.push_back(my_cc);
-		MyPaymTypes.push_back(my_dc);
+		//
+		//MyPaymTypes.push_back(my_wallet);
+		//MyPaymTypes.push_back(my_cc);
+		//MyPaymTypes.push_back(my_dc);
 
-		for (auto var : MyPaymTypes)
-			var.show();
+		LoadFromFile(MyPaymTypes);
+		show_paym_types(MyPaymTypes);
+
+		//for (auto it = MyPaymTypes.begin();
+		//	it != MyPaymTypes.end(); ++it)
+		//{
+		//	(*it).top_up(1000);
+		//}
+
+		//show_paym_types(MyPaymTypes);
 
 		auto it1 = MyPaymTypes.begin();
 		Expense e1{Exp_Groups[0], 130, {1,1,2022}, it1};
@@ -436,8 +625,9 @@ int main()
 		e3.show();
 		cout << endl;
 
-		for (auto var : MyPaymTypes)
-			var.show();
+		show_paym_types(MyPaymTypes);
+
+		SaveToFile(MyPaymTypes);
 	}
 	catch (char* s)
 	{
