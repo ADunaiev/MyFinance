@@ -669,62 +669,181 @@ void show_expenses(vector<Expense>& object)
 		var.show();
 }
 
-//int Menu()
-//{
-//	int temp;
-//	cout << "\nPlease make your choice:\n";
-//	cout << " 1 - to see all autos\n";
-//	cout << " 2 - to add new auto\n";
-//	cout << " 3 - to delete auto\n";
-//	cout << " 4 - to edit auto\n";
-//	cout << " 5 - to sort data\n";
-//	cout << " 6 - to find auto\n";
-//	cout << " 7 - show total number and car value\n";
-//	cout << " 0 - to exit programm\n";
-//	cout << "\nYour choice is - ";
-//	cin >> temp;
-//
-//	return temp;
-//}
+int Menu()
+{
+	int temp;
+	cout << "\nPlease make your choice:\n";
+	cout << " 1 - to see payment types\n";
+	cout << " 2 - to top-up payment mode\n";
+	cout << " 3 - to see expenses\n";
+	cout << " 4 - to input new expense\n";
+	cout << " 5 - to make expense report\n";
+	cout << " 6 - to see top-3 expenses\n";
+	cout << " 0 - to exit programm\n";
+	cout << "\nYour choice is - ";
+	cin >> temp;
+
+	return temp;
+}
 
 int main()
 {
 	try {
 
 		LoadFromFile(MyPaymTypes);
-		show_paym_types(MyPaymTypes);
-
-		//for (auto it = MyPaymTypes.begin();
-		//	it != MyPaymTypes.end(); ++it)
-		//{
-		//	(*it).top_up(1000);
-		//}
-		//show_paym_types(MyPaymTypes);
-
-		//auto it1 = MyPaymTypes.begin();
-		//Expense e1{Exp_Groups[0], 130, {1,1,2022}, it1};
-		//e1.show();
-
-		//Expense e2{ Exp_Groups[1], 105, {10,1,2022}, it1+1 };
-		//e2.show();
-
-		//Expense e3{ Exp_Groups[2], 300, {20,4,2022}, it1+2 };
-		//e3.show();
-		//cout << endl;
-
-		//MyExpenses.push_back(e1);
-		//MyExpenses.push_back(e2);
-		//MyExpenses.push_back(e3);
-
-		//SaveToFile(MyExpenses);
-
 		LoadFromFile(MyExpenses);
-		show_expenses(MyExpenses);
-		cout << endl;
 
-		show_paym_types(MyPaymTypes);
+		for (auto it = MyPaymTypes.begin(); it != MyPaymTypes.end(); ++it)
+			(*it).top_up(1000);
 
-		//SaveToFile(MyPaymTypes);
+		do {
+			        switch (Menu()) {
+			        case 1:
+					{
+						show_paym_types(MyPaymTypes);
+						break;
+					}
+			        case 2:
+			        {
+			           
+			            break;
+			        }
+			        case 3:
+			        {
+						show_expenses(MyExpenses);
+			            break;
+			        }
+			        case 4:
+			        {
+
+			            break;
+			        }
+			        case 5:
+			        {
+			            
+
+			            break;
+			        }
+			        case 6:
+			        {
+			            /*int t3 = 1;
+
+			            do {
+			                switch (Find_Menu())
+			                {
+			                case 1:
+			                {
+			                    string temp_s;
+			                    cout << "Enter car name: ";
+			                    cin >> temp_s;
+
+			                    auto it = find_if(autos.begin(), autos.end(),
+			                        [&](Auto& a) { return a.get_name() == temp_s; });
+
+			                    if (it != autos.cend())
+			                    {
+			                        cout << "There is car with this name\n" << endl;
+			                        cout << *it;
+			                    }
+			                    else
+			                        cout << "There is no car with this name\n" << endl;
+
+			                    break;
+			                }
+			                case 2:
+			                {
+			                    int temp_year;
+			                    cout << "Enter car production year: ";
+			                    cin >> temp_year;
+
+			                    auto it = find_if(autos.begin(), autos.end(),
+			                        [&](Auto& a) { return a.get_prod_year() == temp_year; });
+
+			                    if (it != autos.end())
+			                    {
+			                        cout << "There is car with this production year\n" << endl;
+			                        cout << *it;
+			                    }
+			                    else
+			                        cout << "There is no car with this production year\n" << endl;
+
+			                    break;
+			                }
+			                case 3:
+			                {
+			                    int temp_eng_vol;
+			                    cout << "Enter car engine volume: ";
+			                    cin >> temp_eng_vol;
+
+			                    auto it = find_if(autos.begin(), autos.end(),
+			                        [&](Auto& a)
+			                        { return a.get_engine_volume() == temp_eng_vol; });
+
+			                    if (it != autos.end())
+			                    {
+			                        cout << "There is car with this engine volume\n" << endl;
+			                        cout << *it;
+			                    }
+			                    else
+			                        cout << "There is no car with this engine volume\n" << endl;
+
+			                    break;
+			                }
+			                case 4:
+			                {
+			                    double temp_price;
+			                    cout << "Enter car price: ";
+			                    cin >> temp_price;
+
+			                    auto it = find_if(autos.begin(), autos.end(),
+			                        [&](Auto& a) { return a.get_price() == temp_price; });
+
+			                    if (it != autos.end())
+			                    {
+			                        cout << "There is car with this price\n" << endl;
+			                        cout << *it;
+			                    }
+			                    else
+			                        cout << "There is no car with this price\n" << endl;
+
+
+			                    break;
+			                }
+			                case 0:
+			                    t3 = 0;
+			                    break;
+			                default:
+			                    cout << "Wrong choice!\n";
+			                }
+
+			            } while (t3);*/
+
+			            break;
+			        }
+			        case 7:
+			        {
+
+			            break;
+			        }
+			        case 0:
+			        {cout << "Good Buy!\n";
+			        SaveToFile(MyExpenses);
+					SaveToFile(MyPaymTypes);
+			        return 0;
+			        }
+			        default:
+			            cout << "Wrong choice!\n";
+			        }
+			    } while (1);
+
+
+
+		/*auto it1 = MyPaymTypes.begin();*/
+		//Expense e4{ Exp_Groups[3], 110, {20,4,2022}, it1 + 1 };
+		//e4.show();
+		//MyExpenses.push_back(e4);
+
+
 	}
 	catch (char* s)
 	{
