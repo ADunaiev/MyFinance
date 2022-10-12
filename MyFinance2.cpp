@@ -396,18 +396,30 @@ public:
 	double get_amount();
 	Date get_date();
 	vector<Payment_type>::iterator get_paym_type();
+	void set_exp_number(int exp_numberP);
+	void set_exp_group(string exp_groupP);
+	void set_amount(double amountP);
+	void set_date(Date dateP);
+	void set_paym_type(vector<Payment_type>::iterator paym_typeP);
 };
 Expense::Expense(string exp_groupP, 
 	double amountP, Date dateP, vector<Payment_type>::iterator paym_typeP) :
 	exp_group {exp_groupP}, amount{ amountP },
-	date{ dateP }, paym_type{ paym_typeP }
+	date{ dateP }
 {	
 	exp_count();
 	exp_number = exp_count.get_count(); 
-	paym_type->write_off(amount);
+	paym_type = paym_typeP;
+	(* paym_type).write_off(amount);
 }
-Expense::Expense() : 
-	Expense("", 0, {1,1,1990}, vector<Payment_type>::iterator()) {}
+Expense::Expense() {
+	exp_count();
+	exp_number = exp_count.get_count();
+	exp_group = "";
+	amount = 0;
+	date = { 1, 1, 1990 };
+	paym_type = vector<Payment_type>::iterator();
+}
 void Expense::show()
 {
 	cout << exp_number << "\t" << date << "\t" << exp_group << "\t" 
@@ -432,6 +444,27 @@ Date Expense::get_date()
 vector<Payment_type>::iterator Expense::get_paym_type()
 {
 	return paym_type;
+}
+void Expense::set_exp_number(int exp_numberP)
+{
+	exp_number = exp_numberP;
+}
+void Expense::set_exp_group(string exp_groupP)
+{
+	exp_group = exp_groupP;
+}
+void Expense::set_amount(double amountP)
+{
+	(*paym_type).write_off(amountP);
+	amount = amountP;
+}
+void Expense::set_date(Date dateP)
+{
+	date = dateP;
+}
+void Expense::set_paym_type(vector<Payment_type>::iterator paym_typeP)
+{
+	paym_type = paym_typeP;
 }
 
 vector<Payment_type> MyPaymTypes;
@@ -478,45 +511,6 @@ void SaveToFile(vector<Payment_type>& object)
 	f.close();
 	delete[] temp;
 }
-
-//void SaveToFile(list<Auto>& l_auto)
-//{
-//	remove("Autos.txt");
-//
-//	int size; char* temp = nullptr; 
-//	double size_d;
-//
-//	fstream f("Autos.txt", ios::out | ios::binary | ios::app);
-//
-//	if (!f)
-//	{
-//		throw "\nFile is not opened for writing!\n";
-//	}
-//
-//	for (auto var : l_auto)
-//	{
-//		if (temp != nullptr)
-//			delete[] temp;
-//
-//		size = var.get_name().size();
-//		f.write((char*)&size, sizeof(int));
-//		temp = new char[size + 1];
-//		strcpy_s(temp, size + 1, var.get_name().c_str());
-//		f.write((char*)temp, size * sizeof(char));
-//
-//		size = var.get_prod_year();
-//		f.write((char*)&size, sizeof(int));
-//
-//		size = var.get_engine_volume();
-//		f.write((char*)&size, sizeof(int));
-//
-//		size_d = var.get_price();
-//		f.write((char*)&size_d, sizeof(double));
-//	}
-//
-//	f.close();
-//	delete[] temp;
-//}
 vector<Payment_type>& LoadFromFile(vector<Payment_type>& object) {
 	fstream f("Payment_types.txt", ios::in | ios::binary);
 	if (!f) {
@@ -565,10 +559,114 @@ vector<Payment_type>& LoadFromFile(vector<Payment_type>& object) {
 	return object;
 }
 
+vector<Expense> MyExpenses;
+void SaveToFile(vector<Expense>& object)
+{
+	remove("Expenses.txt");
+
+	int size; char* temp = nullptr;
+	double size_d;
+
+	fstream f("Expenses.txt", ios::out | ios::binary | ios::app);
+
+	if (!f)
+	{
+		throw "\nFile is not opened for writing!\n";
+	}
+	for (auto var : object)
+	{
+		if (temp != nullptr)
+			delete[] temp;
+
+		size = var.get_exp_number();
+		f.write((char*)&size, sizeof(int));
+
+		size = distance(MyPaymTypes.begin(), var.get_paym_type());
+		f.write((char*)&size, sizeof(int));
+
+		size = var.get_exp_group().size();
+		f.write((char*)&size, sizeof(int));
+		temp = new char[size + 1];
+		strcpy_s(temp, size + 1, var.get_exp_group().c_str());
+		f.write((char*)temp, size * sizeof(char));
+
+		size_d = var.get_amount();
+		f.write((char*)&size_d, sizeof(double));
+
+		size = var.get_date().get_day();
+		f.write((char*)&size, sizeof(int));
+
+		size = var.get_date().get_month();
+		f.write((char*)&size, sizeof(int));
+
+		size = var.get_date().get_year();
+		f.write((char*)&size, sizeof(int));
+	}
+
+	f.close();
+	delete[] temp;
+}
+vector<Expense>& LoadFromFile(vector<Expense>& object) {
+	fstream f("Expenses.txt", ios::in | ios::binary);
+	if (!f) {
+		throw "\nFile is not opened for reading!\n\n";
+	}
+	char* temp = nullptr;
+	int size; double size_d;
+	int _day, _month, _year;
+
+	while (f.read((char*)&size, sizeof(int)))
+	{
+		Expense a_temp;
+
+		if (temp != nullptr)
+			delete[] temp;
+
+		a_temp.set_exp_number(size);
+
+		f.read((char*)&size, sizeof(int));
+		vector<Payment_type>::iterator it = MyPaymTypes.begin() + size;
+		a_temp.set_paym_type(it);
+
+		f.read((char*)&size, sizeof(int));
+		temp = new char[size + 1];
+		f.read((char*)temp, size * sizeof(char));
+		temp[size] = '\0';
+		a_temp.set_exp_group(temp);
+
+		f.read((char*)&size_d, sizeof(double));
+		a_temp.set_amount(size_d);
+
+		f.read((char*)&size, sizeof(int));
+		_day = size;
+
+		f.read((char*)&size, sizeof(int));
+		_month = size;
+
+		f.read((char*)&size, sizeof(int));
+		_year = size;
+
+		a_temp.set_date({ _day, _month, _year });
+
+		object.push_back(a_temp);
+	}
+
+	f.close();
+	if (temp != nullptr)
+		delete[] temp;
+
+	return object;
+}
+
 void show_paym_types(vector<Payment_type>& object)
 {
 	for (auto var : object)
 		var.show();	
+}
+void show_expenses(vector<Expense>& object)
+{
+	for (auto var : object)
+		var.show();
 }
 
 //int Menu()
@@ -593,16 +691,6 @@ int main()
 {
 	try {
 
-		//Wallet my_wallet(100);
-		//my_wallet.top_up(150);
-		//Debet_Card my_dc(1000, { 31,10,2027 });	
-		//Credit_Card my_cc(1500, {30, 9, 2025});
-
-		//
-		//MyPaymTypes.push_back(my_wallet);
-		//MyPaymTypes.push_back(my_cc);
-		//MyPaymTypes.push_back(my_dc);
-
 		LoadFromFile(MyPaymTypes);
 		show_paym_types(MyPaymTypes);
 
@@ -611,23 +699,32 @@ int main()
 		//{
 		//	(*it).top_up(1000);
 		//}
-
 		//show_paym_types(MyPaymTypes);
 
-		auto it1 = MyPaymTypes.begin();
-		Expense e1{Exp_Groups[0], 130, {1,1,2022}, it1};
-		e1.show();
+		//auto it1 = MyPaymTypes.begin();
+		//Expense e1{Exp_Groups[0], 130, {1,1,2022}, it1};
+		//e1.show();
 
-		Expense e2{ Exp_Groups[1], 105, {10,1,2022}, it1+1 };
-		e2.show();
+		//Expense e2{ Exp_Groups[1], 105, {10,1,2022}, it1+1 };
+		//e2.show();
 
-		Expense e3{ Exp_Groups[2], 300, {20,4,2022}, it1+2 };
-		e3.show();
+		//Expense e3{ Exp_Groups[2], 300, {20,4,2022}, it1+2 };
+		//e3.show();
+		//cout << endl;
+
+		//MyExpenses.push_back(e1);
+		//MyExpenses.push_back(e2);
+		//MyExpenses.push_back(e3);
+
+		//SaveToFile(MyExpenses);
+
+		LoadFromFile(MyExpenses);
+		show_expenses(MyExpenses);
 		cout << endl;
 
 		show_paym_types(MyPaymTypes);
 
-		SaveToFile(MyPaymTypes);
+		//SaveToFile(MyPaymTypes);
 	}
 	catch (char* s)
 	{
