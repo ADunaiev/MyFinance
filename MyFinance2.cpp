@@ -10,10 +10,12 @@ using namespace std;
 //■ Наличие разных кошельков и карт(дебетовых / кредитных);
 //■ Пополнение кошельков и карт;
 //■ Внесение затрат.Каждая затрата относится к определенной категории;
+
 //■ Формирование отчетов по затратам и категориям :
 //• день;
 //• неделя;
 //• месяц.
+// 
 //■ Формирование рейтингов по максимальным суммам :
 //• ТОП - 3 затрат :
 //	ӽ неделя;
@@ -30,14 +32,19 @@ const vector<string> months{ "January", "February", "March", "April",
 const vector<string> week_days{ "Monday", "Tuesday", "Wednesday",
 					"Thirthday", "Friday", "Saturday", "Sunday" };
 
-struct Week_Number
+class Week_Number
 {
 	int week;
 	int year;
 public:
 	Week_Number(int weekP, int yearP) : week{weekP}, year {yearP}{}
 	Week_Number() : Week_Number(1, 1900){}	
+	friend bool operator==(Week_Number& left, Week_Number& right);
 };
+bool operator==(Week_Number& left, Week_Number& right)
+{
+	return (left.week == right.week) && (left.year == right.year);
+}
 
 ostream& operator<<(ostream& out, const Week_Number& object)
 {
@@ -69,6 +76,7 @@ public:
 	bool IsCorrect();
 	friend bool operator<(const Date& left, const Date& right);
 	friend bool operator>(const Date& left, const Date& right);
+	friend bool operator==(const Date& left, const Date& right);
 	int convToInt() const;
 	int get_weekday() const;
 };
@@ -228,6 +236,19 @@ int operator-(const Date& left, const Date& right)
 {
 	return left.convToInt() - right.convToInt();
 }
+bool operator==(Date& left, Date& right)
+{
+	bool temp = 1;
+
+	if (left.day != right.day)
+		temp = 0;
+	if (left.month != right.month)
+		temp = 0;
+	if (left.year != right.year)
+		temp = 0;
+
+	return temp;
+}
 
 
 class Payment_type
@@ -306,7 +327,7 @@ void Payment_type::write_off(double write_offP)
 }
 void Payment_type::show() const
 {
-	cout << "This is payment type: " << name << endl;
+	cout << "payment type: " << name << endl;
 	cout << "Available balance is: " << balance << endl;
 	cout << "Minimum balance is: " << min_balance << endl;
 	cout << "Valid till: " << valid_till << endl;
@@ -410,7 +431,7 @@ Expense::Expense(string exp_groupP,
 	exp_count();
 	exp_number = exp_count.get_count(); 
 	paym_type = paym_typeP;
-	(* paym_type).write_off(amount);
+	/*(* paym_type).write_off(amount);*/
 }
 Expense::Expense() {
 	exp_count();
@@ -455,7 +476,7 @@ void Expense::set_exp_group(string exp_groupP)
 }
 void Expense::set_amount(double amountP)
 {
-	(*paym_type).write_off(amountP);
+	/*(*paym_type).write_off(amountP);*/
 	amount = amountP;
 }
 void Expense::set_date(Date dateP)
@@ -660,14 +681,44 @@ vector<Expense>& LoadFromFile(vector<Expense>& object) {
 
 void show_paym_types(vector<Payment_type>& object)
 {
+	int i = 1;
 	for (auto var : object)
-		var.show();	
+	{
+		cout << i << " "; i++;
+		var.show();
+	}
 }
 void show_expenses(vector<Expense>& object)
 {
 	for (auto var : object)
 		var.show();
 }
+void write_off_all_expenses(vector<Expense>& object)
+{
+	for (auto it = object.begin(); it != object.end(); ++it)
+	{
+		auto it_pt = (*it).get_paym_type();
+		double amountP = (*it).get_amount();
+		(*it_pt).write_off(amountP);
+	}
+}
+
+bool IsDate(Date& left, Date& right)
+{
+	return left == right;
+}
+bool IsWeek(Date& left, Date& right)
+{
+	Week_Number left_w = left.week_num();
+	Week_Number right_w = right.week_num();
+
+	return left_w == right_w;
+}
+bool IsMonth(Date& left, Date& right)
+{
+	return left.get_month() == right.get_month();
+}
+
 
 int Menu()
 {
@@ -675,10 +726,11 @@ int Menu()
 	cout << "\nPlease make your choice:\n";
 	cout << " 1 - to see payment types\n";
 	cout << " 2 - to top-up payment mode\n";
-	cout << " 3 - to see expenses\n";
-	cout << " 4 - to input new expense\n";
-	cout << " 5 - to make expense report\n";
-	cout << " 6 - to see top-3 expenses\n";
+	cout << " 3 - to see all expenses from file\n";
+	cout << " 4 - to write-off all expenses\n";
+	cout << " 5 - to input new expense\n";
+	cout << " 6 - to make expense report\n";
+	cout << " 7 - to see top-3 expenses\n";
 	cout << " 0 - to exit programm\n";
 	cout << "\nYour choice is - ";
 	cin >> temp;
@@ -693,8 +745,8 @@ int main()
 		LoadFromFile(MyPaymTypes);
 		LoadFromFile(MyExpenses);
 
-		for (auto it = MyPaymTypes.begin(); it != MyPaymTypes.end(); ++it)
-			(*it).top_up(1000);
+		//for (auto it = MyPaymTypes.begin(); it != MyPaymTypes.end(); ++it)
+		//	(*it).top_up(1000);
 
 		do {
 			        switch (Menu()) {
@@ -705,7 +757,25 @@ int main()
 					}
 			        case 2:
 			        {
-			           
+						int t2;
+						double amountP;
+						cout << "Choose payment type to top-up\n";
+						show_paym_types(MyPaymTypes);
+						cout << "you choose: ";
+						cin >> t2;
+
+						if (t2<1 || t2 >= MyPaymTypes.size())
+							throw (char*)"Wrong choice!\n";
+
+						cout << "Enter top-up amount: ";
+						cin >> amountP;
+
+						auto it1 = MyPaymTypes.begin();
+						it1 += t2 - 1;
+						(*it1).top_up(amountP);
+
+						cout << "Payment mode topped-up!\n";
+
 			            break;
 			        }
 			        case 3:
@@ -715,12 +785,51 @@ int main()
 			        }
 			        case 4:
 			        {
-
+						write_off_all_expenses(MyExpenses);
 			            break;
 			        }
 			        case 5:
 			        {
-			            
+						int _day, _month, _year;
+						int exp_number, paym_number;
+						double amountP;
+
+						cout << "\nEnter expence date: ";
+						cin >> _day;
+						cout << "\nEnter expence month: ";
+						cin >> _month;
+						cout << "\nEnter expence year: ";
+						cin >> _year;
+
+						cout << "Enter expense amount: ";
+						cin >> amountP;
+
+						cout << "Choose expense type: \n";
+						int i = 1;
+						for (auto var : Exp_Groups)
+						{
+							cout << i++ << " - " << var << endl;
+						}
+						cin >> exp_number;
+
+						if (exp_number < 1 || exp_number > Exp_Groups.size())
+							throw (char*)"Wrong index";
+
+						cout << "Choose payment type: ";
+						show_paym_types(MyPaymTypes);
+						cin >> paym_number;
+
+						if (paym_number < 1 || paym_number > MyPaymTypes.size())
+							throw (char*)"Wrong index";
+
+						auto it_pm = MyPaymTypes.begin();
+						it_pm += paym_number - 1;
+
+						Expense e_temp{ Exp_Groups[exp_number - 1], amountP,
+							{_day,_month,_year}, it_pm };
+						MyExpenses.push_back(e_temp);
+
+						cout << "\nExpense added!\n";
 
 			            break;
 			        }
