@@ -10,7 +10,6 @@ using namespace std;
 //■ Наличие разных кошельков и карт(дебетовых / кредитных);
 //■ Пополнение кошельков и карт;
 //■ Внесение затрат.Каждая затрата относится к определенной категории;
-
 //■ Формирование отчетов по затратам и категориям :
 //• день;
 //• неделя;
@@ -40,12 +39,17 @@ public:
 	Week_Number(int weekP, int yearP) : week{weekP}, year {yearP}{}
 	Week_Number() : Week_Number(1, 1900){}	
 	friend bool operator==(Week_Number& left, Week_Number& right);
+	friend ostream& operator<<(ostream& out, const Week_Number& object);
+	friend bool operator==(Week_Number left, Week_Number right);
 };
 bool operator==(Week_Number& left, Week_Number& right)
 {
 	return (left.week == right.week) && (left.year == right.year);
 }
-
+bool operator==(Week_Number left, Week_Number right)
+{
+	return (left.week == right.week) && (left.year == right.year);
+}
 ostream& operator<<(ostream& out, const Week_Number& object)
 {
 	out << "week " << object.week << " year " << object.year;
@@ -236,7 +240,7 @@ int operator-(const Date& left, const Date& right)
 {
 	return left.convToInt() - right.convToInt();
 }
-bool operator==(Date& left, Date& right)
+bool operator==(const Date& left, const Date& right)
 {
 	bool temp = 1;
 
@@ -703,35 +707,35 @@ void write_off_all_expenses(vector<Expense>& object)
 	}
 }
 
-bool IsDate(Date& left, Date& right)
-{
-	return left == right;
-}
-bool IsWeek(Date& left, Date& right)
-{
-	Week_Number left_w = left.week_num();
-	Week_Number right_w = right.week_num();
-
-	return left_w == right_w;
-}
-bool IsMonth(Date& left, Date& right)
-{
-	return left.get_month() == right.get_month();
-}
-
-
 int Menu()
 {
 	int temp;
 	cout << "\nPlease make your choice:\n";
 	cout << " 1 - to see payment types\n";
 	cout << " 2 - to top-up payment mode\n";
-	cout << " 3 - to see all expenses from file\n";
+	cout << " 3 - to see all expenses\n";
 	cout << " 4 - to write-off all expenses\n";
 	cout << " 5 - to input new expense\n";
 	cout << " 6 - to make expense report\n";
 	cout << " 7 - to see top-3 expenses\n";
 	cout << " 0 - to exit programm\n";
+	cout << "\nYour choice is - ";
+	cin >> temp;
+
+	return temp;
+}
+
+int Expense_Menu()
+{
+	int temp;
+	cout << "\nPlease make your choice:\n";
+	cout << " 1 - to do Expense Report for day\n";
+	cout << " 2 - to do Expense Report for week\n";
+	cout << " 3 - to do Expense Report for month\n";
+	cout << " 4 - to do Category Report for day\n";
+	cout << " 5 - to do Category Report for week\n";
+	cout << " 6 - to do Category Report for month\n";
+	cout << " 0 - to return to main menu\n";
 	cout << "\nYour choice is - ";
 	cin >> temp;
 
@@ -780,6 +784,12 @@ int main()
 			        }
 			        case 3:
 			        {
+						sort(MyExpenses.begin(), MyExpenses.end(), []
+						(Expense& left, Expense& right)
+							{
+								return left.get_date() < right.get_date();
+							}
+						);
 						show_expenses(MyExpenses);
 			            break;
 			        }
@@ -835,89 +845,209 @@ int main()
 			        }
 			        case 6:
 			        {
-			            /*int t3 = 1;
+			            int t3 = 1;
 
 			            do {
-			                switch (Find_Menu())
+			                switch (Expense_Menu())
 			                {
 			                case 1:
 			                {
-			                    string temp_s;
-			                    cout << "Enter car name: ";
-			                    cin >> temp_s;
+								int  _day, _month, _year;
 
-			                    auto it = find_if(autos.begin(), autos.end(),
-			                        [&](Auto& a) { return a.get_name() == temp_s; });
+								cout << "\nEnter expence date: ";
+								cin >> _day;
+								cout << "\nEnter expence month: ";
+								cin >> _month;
+								cout << "\nEnter expence year: ";
+								cin >> _year;
 
-			                    if (it != autos.cend())
-			                    {
-			                        cout << "There is car with this name\n" << endl;
-			                        cout << *it;
-			                    }
-			                    else
-			                        cout << "There is no car with this name\n" << endl;
+								Date t_date{ _day, _month, _year };
+
+								vector<Expense> result;
+
+								copy_if(MyExpenses.begin(), 									
+									MyExpenses.end(), back_inserter(result),
+									[&t_date](Expense& object)
+									{
+										return object.get_date() == 
+										t_date;
+									});
+
+								cout << "\nThere are " << result.size() << " expenses:\n";
+								for (auto var : result)
+									var.show();
 
 			                    break;
 			                }
 			                case 2:
 			                {
-			                    int temp_year;
-			                    cout << "Enter car production year: ";
-			                    cin >> temp_year;
+								int  _week, _year;
 
-			                    auto it = find_if(autos.begin(), autos.end(),
-			                        [&](Auto& a) { return a.get_prod_year() == temp_year; });
+								cout << "\nEnter week number: ";
+								cin >> _week;
+								cout << "\nEnter year: ";
+								cin >> _year;
 
-			                    if (it != autos.end())
-			                    {
-			                        cout << "There is car with this production year\n" << endl;
-			                        cout << *it;
-			                    }
-			                    else
-			                        cout << "There is no car with this production year\n" << endl;
+								Week_Number w1{ _week, _year };
 
+								vector<Expense> result2;
+
+								copy_if(MyExpenses.begin(),
+									MyExpenses.end(), back_inserter(result2),
+									[&w1](Expense& object)
+									{
+										Date temp = object.get_date();
+										return temp.week_num() == w1;
+									});
+
+								cout << "\nThere are " << result2.size() << " expenses:\n";
+								for (auto var : result2)
+									var.show();
 			                    break;
 			                }
 			                case 3:
 			                {
-			                    int temp_eng_vol;
-			                    cout << "Enter car engine volume: ";
-			                    cin >> temp_eng_vol;
+								int  _month, _year;
 
-			                    auto it = find_if(autos.begin(), autos.end(),
-			                        [&](Auto& a)
-			                        { return a.get_engine_volume() == temp_eng_vol; });
+								cout << "\nEnter month: ";
+								cin >> _month;
+								cout << "\nEnter year: ";
+								cin >> _year;								
 
-			                    if (it != autos.end())
-			                    {
-			                        cout << "There is car with this engine volume\n" << endl;
-			                        cout << *it;
-			                    }
-			                    else
-			                        cout << "There is no car with this engine volume\n" << endl;
+								vector<Expense> result2;
 
+								copy_if(MyExpenses.begin(),
+									MyExpenses.end(), back_inserter(result2),
+									[&_month, &_year](Expense& object)
+									{
+										return object.get_date().get_month() == _month && 
+											object.get_date().get_year() == _year;
+									});
+
+								cout << "\nThere are " << result2.size() << " expenses:\n";
+								for (auto var : result2)
+									var.show();
 			                    break;
 			                }
 			                case 4:
 			                {
-			                    double temp_price;
-			                    cout << "Enter car price: ";
-			                    cin >> temp_price;
+								int  _day, _month, _year;
 
-			                    auto it = find_if(autos.begin(), autos.end(),
-			                        [&](Auto& a) { return a.get_price() == temp_price; });
+								cout << "\nEnter expence date: ";
+								cin >> _day;
+								cout << "\nEnter expence month: ";
+								cin >> _month;
+								cout << "\nEnter expence year: ";
+								cin >> _year;
 
-			                    if (it != autos.end())
-			                    {
-			                        cout << "There is car with this price\n" << endl;
-			                        cout << *it;
-			                    }
-			                    else
-			                        cout << "There is no car with this price\n" << endl;
+								Date t_date{ _day, _month, _year };
 
+								cout << "\nChoose category:\n";
+								int i = 1; int temp;
+								for (auto var : Exp_Groups)
+								{
+									cout << i++ << " " << var << endl;
+								}
+								cin >> temp;
+
+								if (temp <1 && temp > Exp_Groups.size())
+									throw (char*)"\nWrong index!\n";
+								temp--;
+
+								vector<Expense> result;
+
+								copy_if(MyExpenses.begin(),
+									MyExpenses.end(), back_inserter(result),
+									[&t_date, &temp](Expense& object)
+									{
+										return object.get_date() ==
+											t_date && 
+											object.get_exp_group() == 
+											Exp_Groups[temp];
+									});
+
+								cout << "\nThere are " << result.size() << " expenses:\n";
+								for (auto var : result)
+									var.show();
 
 			                    break;
 			                }
+							case 5:
+							{
+								int  _week, _year;
+
+								cout << "\nEnter week number: ";
+								cin >> _week;
+								cout << "\nEnter year: ";
+								cin >> _year;
+
+								Week_Number w1{ _week, _year };
+
+								cout << "\nChoose category:\n";
+								int i = 1; int temp;
+								for (auto var : Exp_Groups)
+								{
+									cout << i++ << " " << var << endl;
+								}
+								cin >> temp;
+
+								if (temp <1 && temp > Exp_Groups.size())
+									throw (char*)"\nWrong index!\n";
+								temp--;
+
+								vector<Expense> result2;
+
+								copy_if(MyExpenses.begin(),
+									MyExpenses.end(), back_inserter(result2),
+									[&w1, &temp](Expense& object)
+									{
+										
+										return object.get_date().week_num() == w1 &&
+											object.get_exp_group() == Exp_Groups[temp];
+									});
+
+								cout << "\nThere are " << result2.size() << " expenses:\n";
+								for (auto var : result2)
+									var.show();
+								break;
+							}
+							case 6:
+							{
+								int  _month, _year;
+
+								cout << "\nEnter month: ";
+								cin >> _month;
+								cout << "\nEnter year: ";
+								cin >> _year;
+
+								cout << "\nChoose category:\n";
+								int i = 1; int temp;
+								for (auto var : Exp_Groups)
+								{
+									cout << i++ << " " << var << endl;
+								}
+								cin >> temp;
+
+								if (temp <1 && temp > Exp_Groups.size())
+									throw (char*)"\nWrong index!\n";
+								temp--;
+
+								vector<Expense> result2;
+
+								copy_if(MyExpenses.begin(),
+									MyExpenses.end(), back_inserter(result2),
+									[&_month, &_year, &temp](Expense& object)
+									{
+										return object.get_date().get_month() == _month &&
+											object.get_date().get_year() == _year &&
+											object.get_exp_group() == Exp_Groups[temp];
+									});
+
+								cout << "\nThere are " << result2.size() << " expenses:\n";
+								for (auto var : result2)
+									var.show();
+								break;
+							}
 			                case 0:
 			                    t3 = 0;
 			                    break;
@@ -925,7 +1055,7 @@ int main()
 			                    cout << "Wrong choice!\n";
 			                }
 
-			            } while (t3);*/
+			            } while (t3);
 
 			            break;
 			        }
@@ -944,14 +1074,6 @@ int main()
 			            cout << "Wrong choice!\n";
 			        }
 			    } while (1);
-
-
-
-		/*auto it1 = MyPaymTypes.begin();*/
-		//Expense e4{ Exp_Groups[3], 110, {20,4,2022}, it1 + 1 };
-		//e4.show();
-		//MyExpenses.push_back(e4);
-
 
 	}
 	catch (char* s)
