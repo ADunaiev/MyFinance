@@ -3,6 +3,7 @@
 #include <vector>
 #include <fstream>
 #include <algorithm>
+#include <sstream>
 using namespace std;
 
 //Создайте систему управления персональными финансами.
@@ -21,6 +22,7 @@ using namespace std;
 //• ТОП - 3 категорий:
 //ӽ неделя;
 //ӽ месяц.
+// 
 //■ Сохранение отчетов и рейтингов в файл.
 
 const vector<int> month_days{ 31,28,31,30,31,30,31,31,30,31,30,31 };
@@ -630,6 +632,52 @@ void SaveToFile(vector<Expense>& object)
 	f.close();
 	delete[] temp;
 }
+void SaveToFile(vector<Expense>& object, string file_nameP)
+{
+	remove(file_nameP.c_str());
+
+	int size; char* temp = nullptr;
+	double size_d;
+
+	fstream f(file_nameP.c_str(), ios::out | ios::binary | ios::app);
+
+	if (!f)
+	{
+		throw "\nFile is not opened for writing!\n";
+	}
+	for (auto var : object)
+	{
+		if (temp != nullptr)
+			delete[] temp;
+
+		size = var.get_exp_number();
+		f.write((char*)&size, sizeof(int));
+
+		size = distance(MyPaymTypes.begin(), var.get_paym_type());
+		f.write((char*)&size, sizeof(int));
+
+		size = var.get_exp_group().size();
+		f.write((char*)&size, sizeof(int));
+		temp = new char[size + 1];
+		strcpy_s(temp, size + 1, var.get_exp_group().c_str());
+		f.write((char*)temp, size * sizeof(char));
+
+		size_d = var.get_amount();
+		f.write((char*)&size_d, sizeof(double));
+
+		size = var.get_date().get_day();
+		f.write((char*)&size, sizeof(int));
+
+		size = var.get_date().get_month();
+		f.write((char*)&size, sizeof(int));
+
+		size = var.get_date().get_year();
+		f.write((char*)&size, sizeof(int));
+	}
+
+	f.close();
+	delete[] temp;
+}
 vector<Expense>& LoadFromFile(vector<Expense>& object) {
 	fstream f("Expenses.txt", ios::in | ios::binary);
 	if (!f) {
@@ -765,6 +813,38 @@ public:
 };
 Category::Category(string nameP, double sumP) : name{nameP}, sum{sumP}{}
 Category::Category() : Category("", 0){}
+void SaveToFile(vector<Category>& object, string file_nameP)
+{
+	remove(file_nameP.c_str());
+
+	int size; char* temp = nullptr;
+	double size_d;
+
+	fstream f(file_nameP.c_str(), ios::out | ios::binary | ios::app);
+
+	if (!f)
+	{
+		throw "\nFile is not opened for writing!\n";
+	}
+	for (auto var : object)
+	{
+		if (temp != nullptr)
+			delete[] temp;
+
+		size = var.name.size();
+		f.write((char*)&size, sizeof(int));
+		temp = new char[size + 1];
+		strcpy_s(temp, size + 1, var.name.c_str());
+		f.write((char*)temp, size * sizeof(char));
+
+		size_d = var.sum;
+		f.write((char*)&size_d, sizeof(double));
+	}
+
+	f.close();
+	delete[] temp;
+}
+
 
 int main()
 {
@@ -773,8 +853,6 @@ int main()
 		LoadFromFile(MyPaymTypes);
 		LoadFromFile(MyExpenses);
 
-		//for (auto it = MyPaymTypes.begin(); it != MyPaymTypes.end(); ++it)
-		//	(*it).top_up(1000);
 
 		do {
 			        switch (Menu()) {
@@ -901,6 +979,15 @@ int main()
 								for (auto var : result)
 									var.show();
 
+								string s_day = to_string(_day);
+								string s_month = to_string(_month);
+								string s_year = to_string(_year);
+
+								string file_name = "ExpRep_" + s_day + s_month +
+									s_year + ".txt";
+
+								SaveToFile(result, file_name);
+
 			                    break;
 			                }
 			                case 2:
@@ -927,6 +1014,14 @@ int main()
 								cout << "\nThere are " << result2.size() << " expenses:\n";
 								for (auto var : result2)
 									var.show();
+
+								string s_week = to_string(_week);
+								string s_year = to_string(_year);
+
+								string file_name = "ExpRep_w" + s_week +
+									s_year + ".txt";
+
+								SaveToFile(result2, file_name);
 			                    break;
 			                }
 			                case 3:
@@ -951,6 +1046,15 @@ int main()
 								cout << "\nThere are " << result2.size() << " expenses:\n";
 								for (auto var : result2)
 									var.show();
+
+								string s_month = to_string(_month);
+								string s_year = to_string(_year);
+
+								string file_name = "ExpRep_m" + s_month + "y" +
+									s_year + ".txt";
+
+								SaveToFile(result2, file_name);
+
 			                    break;
 			                }
 			                case 4:
@@ -994,6 +1098,15 @@ int main()
 								for (auto var : result)
 									var.show();
 
+								string s_day = to_string(_day);
+								string s_month = to_string(_month);
+								string s_year = to_string(_year);
+
+								string file_name = "ExpRep_" + Exp_Groups[temp] + " " + s_day + s_month +
+									s_year + ".txt";
+
+								SaveToFile(result, file_name);
+
 			                    break;
 			                }
 							case 5:
@@ -1033,6 +1146,15 @@ int main()
 								cout << "\nThere are " << result2.size() << " expenses:\n";
 								for (auto var : result2)
 									var.show();
+
+								string s_week = to_string(_week);
+								string s_year = to_string(_year);
+
+								string file_name = "ExpRep_w" + Exp_Groups[temp] + " " + s_week +
+									s_year + ".txt";
+
+								SaveToFile(result2, file_name);
+
 								break;
 							}
 							case 6:
@@ -1070,6 +1192,15 @@ int main()
 								cout << "\nThere are " << result2.size() << " expenses:\n";
 								for (auto var : result2)
 									var.show();
+
+								string s_month = to_string(_month);
+								string s_year = to_string(_year);
+
+								string file_name = "ExpRep_m" + Exp_Groups[temp] + " " + s_month + "y" +
+									s_year + ".txt";
+
+								SaveToFile(result2, file_name);
+
 								break;
 							}
 			                case 0:
@@ -1118,11 +1249,22 @@ int main()
 
 								auto it1 = result2.begin();
 
+								vector<Expense> top3_week;
+
 								cout << "\nThere are top-3 expenses:\n";
 								for (size_t i = 0; i < 3 && i < result2.size(); i++)
 								{
+									top3_week.push_back(*it1);
 									(*it1++).show();
 								}
+
+								string s_week = to_string(_week);
+								string s_year = to_string(_year);
+
+								string file_name = "RatingRep_w" + s_week +
+									s_year + ".txt";
+
+								SaveToFile(top3_week, file_name);
 
 								break;
 							}
@@ -1151,12 +1293,22 @@ int main()
 									});
 
 								auto it1 = result2.begin();
+								vector<Expense> top3_month;
 
 								cout << "\nThere are top-3 expenses:\n";
 								for (size_t i = 0; i < 3 && i < result2.size(); i++)
 								{
+									top3_month.push_back(*it1);
 									(*it1++).show();
 								}
+
+								string s_month = to_string(_month);
+								string s_year = to_string(_year);
+
+								string file_name = "RatingRep_m" + s_month + "y" +
+									s_year + ".txt";
+
+								SaveToFile(top3_month, file_name);
 
 								break;
 							}
@@ -1206,12 +1358,22 @@ int main()
 
 								cout << "\nTop-3 expenses Categories:\n";
 								auto it2 = Exp_Groups_Sums.begin();
+								vector<Category> top3_cat_week;
 
 								for (size_t i = 0; i < 3 && (*it2).sum != 0; i++)
 								{
+									top3_cat_week.push_back(*it2);
 									cout << (*it2).name << "\t" << (*it2).sum << endl;
 									it2++;
 								}
+
+								string s_week = to_string(_week);
+								string s_year = to_string(_year);
+
+								string file_name = "Rating_Category_Rep_w" + s_week +
+									s_year + ".txt";
+
+								SaveToFile(top3_cat_week, file_name);
 
 								break;
 							}
@@ -1259,12 +1421,22 @@ int main()
 
 								cout << "\nTop-3 expenses Categories:\n";
 								auto it2 = Exp_Groups_Sums.begin();
+								vector<Category> top3_cat_month;
 
 								for (size_t i = 0; i < 3 && (*it2).sum != 0; i++)
 								{
+									top3_cat_month.push_back(*it2);
 									cout << (*it2).name << "\t" << (*it2).sum << endl;
 									it2++;
 								}
+
+								string s_month = to_string(_month);
+								string s_year = to_string(_year);
+
+								string file_name = "Rating_Category_Rep_m" + s_month + "y" +
+									s_year + ".txt";
+
+								SaveToFile(top3_cat_month, file_name);
 
 								break;
 							}
