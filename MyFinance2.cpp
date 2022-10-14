@@ -14,7 +14,6 @@ using namespace std;
 //• день;
 //• неделя;
 //• месяц.
-// 
 //■ Формирование рейтингов по максимальным суммам :
 //• ТОП - 3 затрат :
 //	ӽ неделя;
@@ -724,7 +723,6 @@ int Menu()
 
 	return temp;
 }
-
 int Expense_Menu()
 {
 	int temp;
@@ -741,6 +739,32 @@ int Expense_Menu()
 
 	return temp;
 }
+int Rating_Menu()
+{
+
+	int temp;
+	cout << "\nPlease make your choice:\n";
+	cout << " 1 - to do Top-3 Expense Rating for week\n";
+	cout << " 2 - to do Top-3 Expense Rating for month\n";
+	cout << " 3 - to do Top-3 Expense Category Rating for week\n";
+	cout << " 4 - to do Top-3 Expense Category Rating for month\n";
+	cout << " 0 - to return to main menu\n";
+	cout << "\nYour choice is - ";
+	cin >> temp;
+
+	return temp;
+}
+
+struct Category
+{
+	string name;
+	double sum;
+public:
+	Category(string nameP, double sumP);
+	Category();
+};
+Category::Category(string nameP, double sumP) : name{nameP}, sum{sumP}{}
+Category::Category() : Category("", 0){}
 
 int main()
 {
@@ -1061,7 +1085,197 @@ int main()
 			        }
 			        case 7:
 			        {
+						int t3 = 1;
 
+						do {
+							switch (Rating_Menu())
+							{
+							case 1:
+							{
+								int  _week, _year;
+
+								cout << "\nEnter week number: ";
+								cin >> _week;
+								cout << "\nEnter year: ";
+								cin >> _year;
+
+								Week_Number w1{ _week, _year };
+
+								vector<Expense> result2;
+
+								copy_if(MyExpenses.begin(),
+									MyExpenses.end(), back_inserter(result2),
+									[&w1](Expense& object)
+									{
+										Date temp = object.get_date();
+										return temp.week_num() == w1;
+									});
+								
+								sort(result2.begin(), result2.end(), [](Expense& left, Expense& right)
+									{
+										return left.get_amount() > right.get_amount();
+									});
+
+								auto it1 = result2.begin();
+
+								cout << "\nThere are top-3 expenses:\n";
+								for (size_t i = 0; i < 3 && i < result2.size(); i++)
+								{
+									(*it1++).show();
+								}
+
+								break;
+							}
+							case 2:
+							{
+								int  _month, _year;
+
+								cout << "\nEnter month: ";
+								cin >> _month;
+								cout << "\nEnter year: ";
+								cin >> _year;
+
+								vector<Expense> result2;
+
+								copy_if(MyExpenses.begin(),
+									MyExpenses.end(), back_inserter(result2),
+									[&_month, &_year](Expense& object)
+									{
+										return object.get_date().get_month() == _month &&
+											object.get_date().get_year() == _year;
+									});
+
+								sort(result2.begin(), result2.end(), [](Expense& left, Expense& right)
+									{
+										return left.get_amount() > right.get_amount();
+									});
+
+								auto it1 = result2.begin();
+
+								cout << "\nThere are top-3 expenses:\n";
+								for (size_t i = 0; i < 3 && i < result2.size(); i++)
+								{
+									(*it1++).show();
+								}
+
+								break;
+							}
+							case 3:
+							{
+								int  _week, _year;
+
+								cout << "\nEnter week number: ";
+								cin >> _week;
+								cout << "\nEnter year: ";
+								cin >> _year;
+
+								Week_Number w1{ _week, _year };
+
+								vector<Expense> result2;
+
+								copy_if(MyExpenses.begin(),
+									MyExpenses.end(), back_inserter(result2),
+									[&w1](Expense& object)
+									{
+
+										return object.get_date().week_num() == w1;
+									});
+
+								vector<Category> Exp_Groups_Sums;
+
+								for (auto var : Exp_Groups)
+								{
+									double sum_temp = 0;
+
+									for (auto var2 : result2)
+									{
+										if (var2.get_exp_group() == var)
+										{
+											sum_temp += var2.get_amount();
+										}
+									}
+									cout << var << " " << sum_temp;
+									Exp_Groups_Sums.push_back({var, sum_temp});
+								}
+
+								sort(Exp_Groups_Sums.begin(), Exp_Groups_Sums.end(),
+									[](Category& left, Category& right)
+									{
+										return left.sum > right.sum;
+									});
+
+								cout << "\nTop-3 expenses Categories:\n";
+								auto it2 = Exp_Groups_Sums.begin();
+
+								for (size_t i = 0; i < 3 && (*it2).sum != 0; i++)
+								{
+									cout << (*it2).name << "\t" << (*it2).sum << endl;
+									it2++;
+								}
+
+								break;
+							}
+							case 4:
+							{
+								int  _month, _year;
+
+								cout << "\nEnter month: ";
+								cin >> _month;
+								cout << "\nEnter year: ";
+								cin >> _year;
+
+								vector<Expense> result2;
+
+								copy_if(MyExpenses.begin(),
+									MyExpenses.end(), back_inserter(result2),
+									[&_month, &_year](Expense& object)
+									{
+										return object.get_date().get_month() == _month &&
+											object.get_date().get_year() == _year;
+									});
+
+								vector<Category> Exp_Groups_Sums;
+
+								for (auto var : Exp_Groups)
+								{
+									double sum_temp = 0;
+
+									for (auto var2 : result2)
+									{
+										if (var2.get_exp_group() == var)
+										{
+											sum_temp += var2.get_amount();
+										}
+									}
+									cout << var << " " << sum_temp;
+									Exp_Groups_Sums.push_back({ var, sum_temp });
+								}
+
+								sort(Exp_Groups_Sums.begin(), Exp_Groups_Sums.end(),
+									[](Category& left, Category& right)
+									{
+										return left.sum > right.sum;
+									});
+
+								cout << "\nTop-3 expenses Categories:\n";
+								auto it2 = Exp_Groups_Sums.begin();
+
+								for (size_t i = 0; i < 3 && (*it2).sum != 0; i++)
+								{
+									cout << (*it2).name << "\t" << (*it2).sum << endl;
+									it2++;
+								}
+
+								break;
+							}
+							case 0:
+								t3 = 0;
+								break;
+							default:
+								cout << "Wrong choice!\n";
+							}
+
+						} while (t3);
 			            break;
 			        }
 			        case 0:
